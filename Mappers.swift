@@ -17,7 +17,9 @@ private func parseCompactTitle(_ title: String) -> (status: String, doctor: Stri
     return (status, doctor, specialty, appointmentISO, duration)
 }
 
-public func appointmentModel(from dto: PostDTO) -> AppointmentModel {
+/// Crea un AppointmentModel a partir de PostDTO.
+/// Si se pasa `localId`, se preserva ese UUID (útil cuando la entidad local ya existe).
+public func appointmentModel(from dto: PostDTO, localId: UUID? = nil) -> AppointmentModel {
     let compact = parseCompactTitle(dto.title)
     let appointmentDate: Date
     if let iso = compact.appointmentISO, let date = ISO8601DateFormatter().date(from: iso) {
@@ -27,6 +29,7 @@ public func appointmentModel(from dto: PostDTO) -> AppointmentModel {
     }
     let duration = compact.duration ?? 30
     return AppointmentModel(
+        id: localId ?? UUID(),
         remoteId: dto.id,
         patientId: dto.userId,
         patientName: "Paciente \(dto.userId ?? 0)",

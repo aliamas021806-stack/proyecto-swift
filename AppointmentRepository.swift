@@ -27,7 +27,7 @@ public final class AppointmentRepository: AppointmentRepositoryProtocol {
     }
 
     public func fetch(id: UUID) async throws -> AppointmentModel? {
-        // No hay mapeo directo desde UUID a remote id; buscar entre todos por remoteId si existe.
+        // No hay mapeo directo desde UUID a remote id; buscar entre todos por id local si existe.
         let all = try await fetchAll()
         return all.first { $0.id == id }
     }
@@ -39,22 +39,19 @@ public final class AppointmentRepository: AppointmentRepositoryProtocol {
         // Por ahora intentamos enviar a API para obtener remote id (recordar que JSONPlaceholder no persiste)
         let dto = postDTO(from: copy)
         let created = try await api.createPost(dto)
-        var mapped = appointmentModel(from: created)
-        // keep local id
-        mapped.id = copy.id
+        var mapped = appointmentModel(from: created, localId: copy.id)
         mapped.synchronizationState = .synchronized
         return mapped
     }
 
     public func update(_ appointment: AppointmentModel) async throws -> AppointmentModel {
-        guard let remote = appointment.remoteId else {
+        guard let _ = appointment.remoteId else {
             // no remote id — treat as create
             return try await create(appointment)
         }
         let dto = postDTO(from: appointment)
         let updated = try await api.updatePost(dto)
-        var mapped = appointmentModel(from: updated)
-        mapped.id = appointment.id
+        var mapped = appointmentModel(from: updated, localId: appointment.id)
         mapped.synchronizationState = .synchronized
         return mapped
     }

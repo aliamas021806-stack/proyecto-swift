@@ -77,7 +77,8 @@ public final class JSONPlaceholderAPI: APIClient {
 
     public func deletePost(id: Int) async throws {
         let url = baseURL.appendingPathComponent("/posts/\(id)")
-        _ = try await request(url, method: "DELETE") as EmptyResponse
+        // JSONPlaceholder may return an empty object; decode to EmptyResponse to validate success.
+        let _: EmptyResponse = try await request(url, method: "DELETE")
     }
 
     public func fetchUsers() async throws -> [UserDTO] {
